@@ -1,0 +1,68 @@
+jira:
+  url: https://jira.your.company.com
+  token: <your access token>
+
+issue_status_time_report:
+  boards: # board id can be found in url when board is opened in a browser.
+    - name: Your board name
+      id: 123
+  completed_status_name: 'Completed' # need to know which status name is considered to be "complete" to get `date_resolved`
+  columns:
+    translate:
+      issue_key: Issue Key
+      issue_type: Issues Type
+      priority: Priority
+      current_status: Current Status
+      date_created: Date Created
+      date_resolved: Date Resolved
+      sprint: Sprint
+      status: Status # Status of the issue during the period of `from_time` to `to_time`
+      from_time: From Time # `status` from time
+      to_time: To Time # `status` to time
+      duration_minutes: Duration Minutes # How long issue was in `status`
+      duration_hours: Duration Hours
+      duration_days: Duration Days
+  output:
+    - type: raw
+      file_name: issue_status_time_report_raw.xlsx
+    - type: pivot
+      file_name: issue_status_time_report_pivot_hourly.xlsx
+      column: status
+      column_ordering:
+        - New
+        - Open
+        - In Progress
+        - Code Review
+        - Ready for Test
+        - QA Automation
+        - On Hold
+        - Reopened
+        - Under Review
+      rows:
+        - priority
+        - current_status
+        - issue_type
+        - issue_key
+      values:
+        - duration_hours
+    - type: pivot
+      file_name: issue_status_time_report_pivot_daily.xlsx
+      column: status
+      column_ordering:
+        - New
+        - Open
+        - In Progress
+        - Code Review
+        - Ready for Test
+        - QA Automation
+        - On Hold
+        - Reopened
+        - Under Review
+      rows:
+        - priority
+        - current_status
+        - issue_type
+        - issue_key
+      values:
+        - duration_days
+
