@@ -1,3 +1,5 @@
 atlassian-python-api
 simple-term-menu
 pandas
+pyyaml
+openpyxl

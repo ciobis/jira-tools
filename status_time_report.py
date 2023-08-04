@@ -75,7 +75,7 @@ def generate_xlsx(jira_config, report_config):
 
     df = pd.DataFrame.from_records(result_rows)
     df = df.assign(duration_hours = df.duration_minutes / 60)
-    df = df.assign(duration_days = df.duration_minutes / 1440)
+    df = df.assign(duration_days = df.duration_minutes / 480)
     df = df.round({'duration_hours': 2, 'duration_days': 2})
 
     for output in report_config['output']:
