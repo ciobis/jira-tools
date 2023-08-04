@@ -7,6 +7,18 @@ from status_time_report_utils import collect_state_transitions
 from status_time_report_utils import calculate_status_times
 from status_time_report_utils import get_issue_complete_time
 
+
+def get_all_sprints_by_board_id(jira, board_id, state):
+    page = 0
+    page_size = 50
+    result = []
+    page = jira.get_all_sprint(board_id, state, 0, page_size)['values']
+    while page:
+        result.extend(page)
+        page = jira.get_all_sprint(board_id, state, len(result), page_size)['values']
+
+    return result
+
 def generate_xlsx(jira_config, report_config):
     jira = Jira(url=jira_config['url'], token=jira_config['token'])
     
@@ -16,10 +28,14 @@ def generate_xlsx(jira_config, report_config):
     selected_board = report_config['boards'][board_idx]
 
     print(f'Fetching sprints for board: {selected_board["name"]}')
-    active_sprints = jira.get_all_sprint(selected_board['id'], 'active')['values']
-    inactive_sprints = jira.get_all_sprint(selected_board['id'])['values']
+    active_sprints = get_all_sprints_by_board_id(jira, selected_board['id'], 'active')
+    # active_sprints = jira.get_all_sprint(selected_board['id'], 'active')['values']
+    # inactive_sprints = jira.get_all_sprint(selected_board['id'])['values']
+    inactive_sprints = get_all_sprints_by_board_id(jira, selected_board['id'], 'closed')
+    # print(inactive_sprints)
+    # print(get_all_sprints_by_board_id(jira, selected_board['id'], 'closed'))
     inactive_sprints = sorted(inactive_sprints, key= lambda s : s.get('startDate', '2099-01-01'), reverse=True)
-    inactive_sprints = inactive_sprints[0:5]
+    inactive_sprints = inactive_sprints[0:10]
     sprints = active_sprints + inactive_sprints
 
     sprint_names = map(lambda x: f"{x['name']} ({x['state']})", sprints)
@@ -65,13 +81,13 @@ def generate_xlsx(jira_config, report_config):
     for output in report_config['output']:
         type = output['type']
         if type == 'raw':
-            file_name = output['file_name']
+            file_name = selected_sprint["name"] + '_' + output['file_name']
             output_df = df.rename(columns=report_config['columns']['translate'])
             output_df.to_excel(file_name)
 
             print(f'Report generated at: {file_name}')
         if type == 'pivot':
-            file_name = output['file_name']
+            file_name = selected_sprint["name"] + '_' + output['file_name']
             output_df = df.pivot_table(index=output['rows'],
                    columns=[output['column']],
                    values=output['values'],
